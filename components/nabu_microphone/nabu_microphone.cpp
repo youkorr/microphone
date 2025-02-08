@@ -29,54 +29,81 @@ static const size_t TASK_DELAY_MS = 10;
 
 static const char *const TAG = "i2s_audio.microphone";
 
-void NabuMicrophone::setup() {
-    ESP_LOGCONFIG(TAG, "Setting up I2S Audio Microphone...");
+void NabuMicrophoneChannel::setup() {
+  const size_t ring_buffer_size = RING_BUFFER_LENGTH * this->parent_->get_sample_rate() / 1000 * sizeof(int16_t);
+  this->ring_buffer_ = RingBuffer::create(ring_buffer_size);
+  if (this->ring_buffer_ == nullptr) {
+    ESP_LOGE(TAG, "Could not allocate ring buffer");
+    this->mark_failed();
+    return;
+  }
+}
 
-    // Appliquer la configuration en fonction de 'std'
-    if (this->std_ == "primary") {
-        ESP_LOGI(TAG, "Using primary configuration.");
-        this->sample_rate_ = 16000;  // Exemple de configuration pour 'primary'
-    } else if (this->std_ == "secondary") {
-        ESP_LOGI(TAG, "Using secondary configuration.");
-        this->sample_rate_ = 8000;  // Exemple de configuration pour 'secondary'
+void NabuMicrophoneChannel::loop() {
+  if (this->parent_->is_running()) {
+    if (this->is_muted_) {
+      if (this->requested_stop_) {
+        // The microphone was muted when stopping was requested
+        this->state_ = microphone::STATE_STOPPED;
+      } else {
+        this->state_ = microphone::STATE_MUTED;
+      }
     } else {
-        ESP_LOGE(TAG, "Invalid value for 'std'. Valid options are 'primary' or 'secondary'.");
-        this->mark_failed();
-        return;
+      this->state_ = microphone::STATE_RUNNING;
     }
+  } else {
+    this->state_ = microphone::STATE_STOPPED;
+  }
+}
+
+void NabuMicrophone::setup() {
+  ESP_LOGCONFIG(TAG, "Setting up I2S Audio Microphone...");
+
+  // Appliquer la configuration en fonction de 'std'
+  if (this->std_ == "primary") {
+    ESP_LOGI(TAG, "Using primary configuration.");
+    this->sample_rate_ = 16000;  // Exemple de configuration pour 'primary'
+  } else if (this->std_ == "secondary") {
+    ESP_LOGI(TAG, "Using secondary configuration.");
+    this->sample_rate_ = 8000;  // Exemple de configuration pour 'secondary'
+  } else {
+    ESP_LOGE(TAG, "Invalid value for 'std'. Valid options are 'primary' or 'secondary'.");
+    this->mark_failed();
+    return;
+  }
 
 #if SOC_I2S_SUPPORTS_ADC
-    if (this->adc_) {
-        if (this->parent_->get_port() != I2S_NUM_0) {
-            ESP_LOGE(TAG, "Internal ADC only works on I2S0!");
-            this->mark_failed();
-            return;
-        }
-    } else
-#endif
-        if (this->pdm_) {
-        if (this->parent_->get_port() != I2S_NUM_0) {
-            ESP_LOGE(TAG, "PDM only works on I2S0!");
-            this->mark_failed();
-            return;
-        }
+  if (this->adc_) {
+    if (this->parent_->get_port() != I2S_NUM_0) {
+      ESP_LOGE(TAG, "Internal ADC only works on I2S0!");
+      this->mark_failed();
+      return;
     }
+  } else
+#endif
+      if (this->pdm_) {
+    if (this->parent_->get_port() != I2S_NUM_0) {
+      ESP_LOGE(TAG, "PDM only works on I2S0!");
+      this->mark_failed();
+      return;
+    }
+  }
 
-    this->event_queue_ = xQueueCreate(QUEUE_LENGTH, sizeof(TaskEvent));
+  this->event_queue_ = xQueueCreate(QUEUE_LENGTH, sizeof(TaskEvent));
 
 #ifdef USE_OTA
-    ota::get_global_ota_callback()->add_on_state_callback(
-        [this](ota::OTAState state, float progress, uint8_t error, ota::OTAComponent *comp) {
-            if (state == ota::OTA_STARTED) {
-                if (this->read_task_handle_ != nullptr) {
-                    vTaskSuspend(this->read_task_handle_);
-                }
-            } else if (state == ota::OTA_ERROR) {
-                if (this->read_task_handle_ != nullptr) {
-                    vTaskResume(this->read_task_handle_);
-                }
-            }
-        });
+  ota::get_global_ota_callback()->add_on_state_callback(
+      [this](ota::OTAState state, float progress, uint8_t error, ota::OTAComponent *comp) {
+        if (state == ota::OTA_STARTED) {
+          if (this->read_task_handle_ != nullptr) {
+            vTaskSuspend(this->read_task_handle_);
+          }
+        } else if (state == ota::OTA_ERROR) {
+          if (this->read_task_handle_ != nullptr) {
+            vTaskResume(this->read_task_handle_);
+          }
+        }
+      });
 #endif
 }
 
