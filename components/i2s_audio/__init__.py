@@ -170,6 +170,7 @@ CONFIG_SCHEMA_DAC = cv.typed_schema(
         "es8311": cv.Schema(
             {
                 cv.GenerateID(): cv.declare_id(ES8311),
+                cv.Optional(CONF_ENABLE_PIN): pins.gpio_output_pin_schema,  # Ajout du enable_pin
             }
         ).extend(i2c.i2c_device_schema(0x18)),
     },
