@@ -10,7 +10,6 @@ from esphome.components.i2s_audio import (
     I2SAudioComponent,
     I2SAudioIn,
     CONF_I2S_MODE,
-    CONF_PRIMARY,
     I2S_MODE_OPTIONS,
     I2S_BITS_PER_SAMPLE,
     CONF_BITS_PER_SAMPLE,
@@ -63,13 +62,13 @@ def validate_esp32_variant(config):
 
 
 MICROPHONE_CHANNEL_SCHEMA = microphone.MICROPHONE_SCHEMA.extend(
-            {
-                cv.GenerateID(): cv.declare_id(NabuMicrophoneChannel),
-                cv.Optional(CONF_AMPLIFY_SHIFT, default=0): cv.All(
-                    cv.uint8_t, cv.Range(min=0, max=8)
-                ),
-            }
-        )
+    {
+        cv.GenerateID(): cv.declare_id(NabuMicrophoneChannel),
+        cv.Optional(CONF_AMPLIFY_SHIFT, default=0): cv.All(
+            cv.uint8_t, cv.Range(min=0, max=8)
+        ),
+    }
+)
 
 BASE_SCHEMA = cv.Schema(
     {
@@ -79,7 +78,7 @@ BASE_SCHEMA = cv.Schema(
         cv.Optional(CONF_BITS_PER_SAMPLE, default="32bit"): cv.All(
             _validate_bits, cv.enum(I2S_BITS_PER_SAMPLE)
         ),
-        cv.Optional(CONF_I2S_MODE, default=CONF_PRIMARY): cv.enum(
+        cv.Optional(CONF_I2S_MODE, default="std"): cv.enum(  # Correction ici
             I2S_MODE_OPTIONS, lower=True
         ),
         cv.Optional(CONF_USE_APLL, default=False): cv.boolean,
@@ -143,6 +142,6 @@ async def to_code(config):
     cg.add(var.set_sample_rate(config[CONF_SAMPLE_RATE]))
     cg.add(var.set_bits_per_sample(config[CONF_BITS_PER_SAMPLE]))
     cg.add(var.set_use_apll(config[CONF_USE_APLL]))
-    cg.add(var.set_i2s_mode(config[CONF_I2S_MODE]))
+    cg.add(var.set_i2s_mode(config[CONF_I2S_MODE]))  # Utilise la valeur corrigée
 
     cg.add_define("USE_OTA_STATE_CALLBACK")
