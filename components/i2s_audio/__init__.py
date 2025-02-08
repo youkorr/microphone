@@ -26,6 +26,19 @@ CODEOWNERS = ["@jesserockz", "@gnumpi"]
 DEPENDENCIES = ["esp32"]
 MULTI_CONF = True
 
+# Ajout des bits par échantillon I2S
+I2S_BITS_PER_SAMPLE_8BIT = 8
+I2S_BITS_PER_SAMPLE_16BIT = 16
+I2S_BITS_PER_SAMPLE_24BIT = 24
+I2S_BITS_PER_SAMPLE_32BIT = 32
+
+I2S_BITS_PER_SAMPLE = {
+    "8bit": I2S_BITS_PER_SAMPLE_8BIT,
+    "16bit": I2S_BITS_PER_SAMPLE_16BIT,
+    "24bit": I2S_BITS_PER_SAMPLE_24BIT,
+    "32bit": I2S_BITS_PER_SAMPLE_32BIT,
+}
+
 # Ajout des modes I2S
 I2S_MODE_STD = "std"
 I2S_MODE_PDM = "pdm"
