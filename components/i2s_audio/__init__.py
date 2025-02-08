@@ -26,12 +26,13 @@ CODEOWNERS = ["@jesserockz", "@gnumpi"]
 DEPENDENCIES = ["esp32"]
 MULTI_CONF = True
 
+CONF_PRIMARY = "primary"  # Ajout de la constante CONF_PRIMARY
 CONF_I2S_DOUT_PIN = "i2s_dout_pin"
 CONF_I2S_DIN_PIN = "i2s_din_pin"
 CONF_I2S_MCLK_PIN = "i2s_mclk_pin"
 CONF_I2S_BCLK_PIN = "i2s_bclk_pin"
 CONF_I2S_LRCLK_PIN = "i2s_lrclk_pin"
-CONF_I2S_MODE = "i2s_mode"  # Ajout de la constante CONF_I2S_MODE
+CONF_I2S_MODE = "i2s_mode"
 
 CONF_I2S_AUDIO = "i2s_audio"
 CONF_I2S_AUDIO_ID = "i2s_audio_id"
@@ -67,6 +68,7 @@ CONFIG_SCHEMA = cv.Schema(
         cv.Optional(CONF_I2S_BCLK_PIN): pins.internal_gpio_output_pin_number,
         cv.Optional(CONF_I2S_MCLK_PIN): pins.internal_gpio_output_pin_number,
         cv.Optional(CONF_I2S_ACCESS_MODE, default="exclusive"): cv.enum(ACCESS_MODES),
+        cv.Optional(CONF_PRIMARY, default=False): cv.boolean,  # Ajout de l'option PRIMARY
     }
 )
 
@@ -94,6 +96,9 @@ async def to_code(config):
         cg.add(var.set_bclk_pin(config[CONF_I2S_BCLK_PIN]))
     if CONF_I2S_MCLK_PIN in config:
         cg.add(var.set_mclk_pin(config[CONF_I2S_MCLK_PIN]))
+    # Ajout de la configuration PRIMARY
+    if CONF_PRIMARY in config:
+        cg.add(var.set_primary(config[CONF_PRIMARY]))
 
 
 I2SReader = i2s_audio_ns.class_("I2SReader", cg.Parented.template(I2SAudioComponent))
