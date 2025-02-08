@@ -31,6 +31,7 @@ CONF_I2S_DIN_PIN = "i2s_din_pin"
 CONF_I2S_MCLK_PIN = "i2s_mclk_pin"
 CONF_I2S_BCLK_PIN = "i2s_bclk_pin"
 CONF_I2S_LRCLK_PIN = "i2s_lrclk_pin"
+CONF_I2S_MODE = "i2s_mode"  # Ajout de la constante CONF_I2S_MODE
 
 CONF_I2S_AUDIO = "i2s_audio"
 CONF_I2S_AUDIO_ID = "i2s_audio_id"
