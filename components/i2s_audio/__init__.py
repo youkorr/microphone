@@ -109,7 +109,13 @@ def _final_validate(_):
 
 FINAL_VALIDATE_SCHEMA = _final_validate
 
-
+def _validate_bits(value):
+    """Validate that the bits per sample is a valid value."""
+    valid_bits = [16, 24, 32]
+    if value not in valid_bits:
+        raise cv.Invalid(f"Bits per sample must be one of {valid_bits}, not {value}")
+    return value
+    
 async def to_code(config):
     var = cg.new_Pvariable(config[CONF_ID])
     await cg.register_component(var, config)
