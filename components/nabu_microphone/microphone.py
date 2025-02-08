@@ -44,12 +44,16 @@ CHANNELS = {
 INTERNAL_ADC_VARIANTS = [esp32.const.VARIANT_ESP32]
 PDM_VARIANTS = [esp32.const.VARIANT_ESP32, esp32.const.VARIANT_ESP32S3]
 
-# Définir les bits par échantillon valides
-I2S_BITS_PER_SAMPLE = [16, 24, 32]  # Correction ici
+# Définir les bits par échantillon valides sous forme de dictionnaire
+I2S_BITS_PER_SAMPLE = {
+    "16bit": 16,
+    "24bit": 24,
+    "32bit": 32,
+}
 
 def _validate_bits(value):
-    if value not in I2S_BITS_PER_SAMPLE:
-        raise cv.Invalid(f"Bits per sample must be one of {I2S_BITS_PER_SAMPLE}, not {value}")
+    if value not in I2S_BITS_PER_SAMPLE.values():
+        raise cv.Invalid(f"Bits per sample must be one of {list(I2S_BITS_PER_SAMPLE.values())}, not {value}")
     return value
 
 def validate_esp32_variant(config):
@@ -79,8 +83,8 @@ BASE_SCHEMA = cv.Schema(
         cv.GenerateID(): cv.declare_id(NabuMicrophone),
         cv.GenerateID(CONF_I2S_AUDIO_ID): cv.use_id(I2SAudioComponent),
         cv.Optional(CONF_SAMPLE_RATE, default=16000): cv.int_range(min=1),
-        cv.Optional(CONF_BITS_PER_SAMPLE, default=32): cv.All(  # Correction ici
-            _validate_bits, cv.enum(I2S_BITS_PER_SAMPLE)
+        cv.Optional(CONF_BITS_PER_SAMPLE, default=32): cv.All(
+            _validate_bits, cv.enum(I2S_BITS_PER_SAMPLE)  # Utilisation du dictionnaire ici
         ),
         cv.Optional(CONF_I2S_MODE, default="std"): cv.enum(
             I2S_MODE_OPTIONS, lower=True
