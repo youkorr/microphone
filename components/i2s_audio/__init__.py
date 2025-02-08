@@ -96,6 +96,7 @@ async def to_code(config):
 
 
 I2SReader = i2s_audio_ns.class_("I2SReader", cg.Parented.template(I2SAudioComponent))
+I2SAudioIn = I2SReader  # Alias pour I2SReader
 I2SWriter = i2s_audio_ns.class_("I2SWriter", cg.Parented.template(I2SAudioComponent))
 
 ExternalDAC = i2s_audio_ns.class_("ExternalDAC", i2c.I2CDevice)
