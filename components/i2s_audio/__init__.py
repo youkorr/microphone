@@ -26,6 +26,16 @@ CODEOWNERS = ["@jesserockz", "@gnumpi"]
 DEPENDENCIES = ["esp32"]
 MULTI_CONF = True
 
+# Ajout des modes I2S
+I2S_MODE_STD = "std"
+I2S_MODE_PDM = "pdm"
+I2S_MODE_TDM = "tdm"
+I2S_MODE_OPTIONS = {
+    I2S_MODE_STD: "Standard",
+    I2S_MODE_PDM: "PDM",
+    I2S_MODE_TDM: "TDM",
+}    
+
 CONF_PRIMARY = "primary"  # Ajout de la constante CONF_PRIMARY
 CONF_I2S_DOUT_PIN = "i2s_dout_pin"
 CONF_I2S_DIN_PIN = "i2s_din_pin"
