@@ -29,55 +29,43 @@ static const size_t TASK_DELAY_MS = 10;
 
 static const char *const TAG = "i2s_audio.microphone";
 
-enum TaskNotificationBits : uint32_t {
-  COMMAND_START = (1 << 0),  // Starts the main task purpose
-  COMMAND_STOP = (1 << 1),   // stops the main task
-};
+void NabuMicrophone::setup() {
+    ESP_LOGCONFIG(TAG, "Setting up I2S Audio Microphone...");
 
-class NabuMicrophone : public i2s_audio::I2SAudioIn, public Component {
-public:
-    // Define parent_ manually
-    SomeClass* parent_;  // Replace SomeClass with the actual type of parent_
-
-    void setup() override {
-        ESP_LOGCONFIG(TAG, "Setting up I2S Audio Microphone...");
 #if SOC_I2S_SUPPORTS_ADC
-        if (this->adc_) {
-            if (this->parent_->get_port() != I2S_NUM_0) {
-                ESP_LOGE(TAG, "Internal ADC only works on I2S0!");
-                this->mark_failed();
-                return;
-            }
-        } else
-#endif
-        if (this->pdm_) {
-            if (this->parent_->get_port() != I2S_NUM_0) {
-                ESP_LOGE(TAG, "PDM only works on I2S0!");
-                this->mark_failed();
-                return;
-            }
+    if (this->adc_) {
+        if (this->parent_->get_port() != I2S_NUM_0) {
+            ESP_LOGE(TAG, "Internal ADC only works on I2S0!");
+            this->mark_failed();
+            return;
         }
-
-        this->event_queue_ = xQueueCreate(QUEUE_LENGTH, sizeof(TaskEvent));
-
-#ifdef USE_OTA
-        ota::get_global_ota_callback()->add_on_state_callback(
-            [this](ota::OTAState state, float progress, uint8_t error, ota::OTAComponent *comp) {
-                if (state == ota::OTA_STARTED) {
-                    if (this->read_task_handle_ != nullptr) {
-                        vTaskSuspend(this->read_task_handle_);
-                    }
-                } else if (state == ota::OTA_ERROR) {
-                    if (this->read_task_handle_ != nullptr) {
-                        vTaskResume(this->read_task_handle_);
-                    }
-                }
-            });
+    } else
 #endif
+    if (this->pdm_) {
+        if (this->parent_->get_port() != I2S_NUM_0) {
+            ESP_LOGE(TAG, "PDM only works on I2S0!");
+            this->mark_failed();
+            return;
+        }
     }
 
-    // Rest of the class implementation...
-};
+    this->event_queue_ = xQueueCreate(QUEUE_LENGTH, sizeof(TaskEvent));
+
+#ifdef USE_OTA
+    ota::get_global_ota_callback()->add_on_state_callback(
+        [this](ota::OTAState state, float progress, uint8_t error, ota::OTAComponent *comp) {
+            if (state == ota::OTA_STARTED) {
+                if (this->read_task_handle_ != nullptr) {
+                    vTaskSuspend(this->read_task_handle_);
+                }
+            } else if (state == ota::OTA_ERROR) {
+                if (this->read_task_handle_ != nullptr) {
+                    vTaskResume(this->read_task_handle_);
+                }
+            }
+        });
+#endif
+}
 
 void NabuMicrophoneChannel::setup() {
     const size_t ring_buffer_size = RING_BUFFER_LENGTH * this->parent_->get_sample_rate() / 1000 * sizeof(int16_t);
@@ -105,8 +93,6 @@ void NabuMicrophoneChannel::loop() {
         this->state_ = microphone::STATE_STOPPED;
     }
 }
-
-// Rest of the code...
 
 }  // namespace nabu_microphone
 }  // namespace esphome
