@@ -257,7 +257,7 @@ async def register_i2s_writer(writer, config: dict) -> None:
 
     if CONF_I2S_DAC in config:
         dac_cfg = config[CONF_I2S_DAC]
-        if dac_cfg["model"] in ["aw88298", "es8388"]:
+        if dac_cfg["model"] in ["aw88298", "es8388" , "es8311"]:
             cg.add_define("I2S_EXTERNAL_DAC")
             dac = cg.new_Pvariable(dac_cfg[CONF_ID])
             cg.add(writer.set_external_dac(dac))
