@@ -11,11 +11,9 @@ from esphome.components.i2s_audio import (
     I2SAudioIn,
     CONF_I2S_MODE,
     I2S_MODE_OPTIONS,
-    I2S_BITS_PER_SAMPLE,
     CONF_BITS_PER_SAMPLE,
     CONF_I2S_AUDIO_ID,
     CONF_I2S_DIN_PIN,
-    _validate_bits,
 )
 
 CODEOWNERS = ["@kahrendt"]
@@ -46,6 +44,13 @@ CHANNELS = {
 INTERNAL_ADC_VARIANTS = [esp32.const.VARIANT_ESP32]
 PDM_VARIANTS = [esp32.const.VARIANT_ESP32, esp32.const.VARIANT_ESP32S3]
 
+# Définir les bits par échantillon valides
+I2S_BITS_PER_SAMPLE = [16, 24, 32]  # Correction ici
+
+def _validate_bits(value):
+    if value not in I2S_BITS_PER_SAMPLE:
+        raise cv.Invalid(f"Bits per sample must be one of {I2S_BITS_PER_SAMPLE}, not {value}")
+    return value
 
 def validate_esp32_variant(config):
     variant = esp32.get_esp32_variant()
@@ -59,7 +64,6 @@ def validate_esp32_variant(config):
             raise cv.Invalid(f"{variant} does not have an internal ADC")
         return config
     raise NotImplementedError
-
 
 MICROPHONE_CHANNEL_SCHEMA = microphone.MICROPHONE_SCHEMA.extend(
     {
@@ -75,10 +79,10 @@ BASE_SCHEMA = cv.Schema(
         cv.GenerateID(): cv.declare_id(NabuMicrophone),
         cv.GenerateID(CONF_I2S_AUDIO_ID): cv.use_id(I2SAudioComponent),
         cv.Optional(CONF_SAMPLE_RATE, default=16000): cv.int_range(min=1),
-        cv.Optional(CONF_BITS_PER_SAMPLE, default="32bit"): cv.All(
+        cv.Optional(CONF_BITS_PER_SAMPLE, default=32): cv.All(  # Correction ici
             _validate_bits, cv.enum(I2S_BITS_PER_SAMPLE)
         ),
-        cv.Optional(CONF_I2S_MODE, default="std"): cv.enum(  # Correction ici
+        cv.Optional(CONF_I2S_MODE, default="std"): cv.enum(
             I2S_MODE_OPTIONS, lower=True
         ),
         cv.Optional(CONF_USE_APLL, default=False): cv.boolean,
@@ -106,7 +110,6 @@ CONFIG_SCHEMA = cv.All(
     ),
     validate_esp32_variant,
 )
-
 
 async def to_code(config):
     var = cg.new_Pvariable(config[CONF_ID])
@@ -140,8 +143,8 @@ async def to_code(config):
         cg.add(var.set_pdm(config[CONF_PDM]))
 
     cg.add(var.set_sample_rate(config[CONF_SAMPLE_RATE]))
-    cg.add(var.set_bits_per_sample(config[CONF_BITS_PER_SAMPLE]))
+    cg.add(var.set_bits_per_sample(config[CONF_BITS_PER_SAMPLE]))  # Utilise la valeur corrigée
     cg.add(var.set_use_apll(config[CONF_USE_APLL]))
-    cg.add(var.set_i2s_mode(config[CONF_I2S_MODE]))  # Utilise la valeur corrigée
+    cg.add(var.set_i2s_mode(config[CONF_I2S_MODE]))
 
     cg.add_define("USE_OTA_STATE_CALLBACK")
