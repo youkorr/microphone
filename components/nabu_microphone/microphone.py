@@ -52,9 +52,18 @@ I2S_BITS_PER_SAMPLE = {
 }
 
 def _validate_bits(value):
-    if value not in I2S_BITS_PER_SAMPLE.values():
-        raise cv.Invalid(f"Bits per sample must be one of {list(I2S_BITS_PER_SAMPLE.values())}, not {value}")
-    return value
+    # Si la valeur est une chaîne de caractères, vérifiez qu'elle correspond à une clé du dictionnaire
+    if isinstance(value, str):
+        if value not in I2S_BITS_PER_SAMPLE:
+            raise cv.Invalid(f"Bits per sample must be one of {list(I2S_BITS_PER_SAMPLE.keys())}, not {value}")
+        return I2S_BITS_PER_SAMPLE[value]
+    # Si la valeur est un entier, vérifiez qu'elle correspond à une valeur du dictionnaire
+    if isinstance(value, int):
+        if value not in I2S_BITS_PER_SAMPLE.values():
+            raise cv.Invalid(f"Bits per sample must be one of {list(I2S_BITS_PER_SAMPLE.values())}, not {value}")
+        return value
+    # Si la valeur n'est ni une chaîne ni un entier, lancez une erreur
+    raise cv.Invalid(f"Bits per sample must be a string or integer, not {type(value)}")
 
 def validate_esp32_variant(config):
     variant = esp32.get_esp32_variant()
@@ -83,8 +92,8 @@ BASE_SCHEMA = cv.Schema(
         cv.GenerateID(): cv.declare_id(NabuMicrophone),
         cv.GenerateID(CONF_I2S_AUDIO_ID): cv.use_id(I2SAudioComponent),
         cv.Optional(CONF_SAMPLE_RATE, default=16000): cv.int_range(min=1),
-        cv.Optional(CONF_BITS_PER_SAMPLE, default=32): cv.All(
-            _validate_bits, cv.enum(I2S_BITS_PER_SAMPLE)  # Utilisation du dictionnaire ici
+        cv.Optional(CONF_BITS_PER_SAMPLE, default="32bit"): cv.All(
+            _validate_bits, cv.one_of(*I2S_BITS_PER_SAMPLE.keys(), *I2S_BITS_PER_SAMPLE.values())
         ),
         cv.Optional(CONF_I2S_MODE, default="std"): cv.enum(
             I2S_MODE_OPTIONS, lower=True
