@@ -31,7 +31,7 @@ struct TaskEvent {
 
 class NabuMicrophoneChannel;
 
-class NabuMicrophone : public i2s_audio::I2SAudioIn, public Component {
+class NabuMicrophone : public i2s_audio::I2SReader, public Component {
  public:
   void setup() override;
   void start();
@@ -116,7 +116,6 @@ class NabuMicrophoneChannel : public microphone::Microphone, public Component {
   void set_mute_state(bool mute_state) override { this->is_muted_ = mute_state; }
   bool get_mute_state() { return this->is_muted_; }
 
-  // void set_requested_stop() { this->requested_stop_ = true; }
   bool get_requested_stop() { return this->requested_stop_; }
 
   size_t read(int16_t *buf, size_t len, TickType_t ticks_to_wait = 0) override {
@@ -143,3 +142,4 @@ class NabuMicrophoneChannel : public microphone::Microphone, public Component {
 }  // namespace esphome
 
 #endif  // USE_ESP32
+
