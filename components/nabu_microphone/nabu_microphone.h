@@ -88,9 +88,9 @@ class NabuMicrophone : public i2s_audio::I2SReader, public Component {
   adc1_channel_t adc_channel_{ADC1_CHANNEL_MAX};
 #endif
 
-  i2s_bits_per_sample_t bits_per_sample_;
+  i2s_bits_per_sample_t bits_per_sample_ = I2S_BITS_PER_SAMPLE_16BIT;
   i2s_channel_fmt_t channel_;
-  i2s_mode_t i2s_mode_{};
+  i2s_mode_t i2s_mode_ = I2S_MODE_MASTER;
   uint32_t sample_rate_;
 };
 
@@ -142,4 +142,5 @@ class NabuMicrophoneChannel : public microphone::Microphone, public Component {
 }  // namespace esphome
 
 #endif  // USE_ESP32
+
 
