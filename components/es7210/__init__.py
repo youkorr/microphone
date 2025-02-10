@@ -3,7 +3,7 @@ import esphome.config_validation as cv
 from esphome.components import i2c, microphone, i2s_audio
 from esphome.const import CONF_ID, CONF_BITS_PER_SAMPLE, CONF_SAMPLE_RATE
 
-CODEOWNERS = ["@your_github_handle"]
+CODEOWNERS = ["@youkorr"]
 DEPENDENCIES = ["i2c", "i2s_audio", "microphone"]
 AUTO_LOAD = ["microphone"]
 
@@ -17,7 +17,7 @@ CONFIG_SCHEMA = cv.Schema({
     cv.Required(CONF_I2S_AUDIO): cv.use_id(i2s_audio.I2SAudioComponent),
     cv.Optional(CONF_SAMPLE_RATE, default="16000Hz"): cv.int_range(min=8000, max=48000),
     cv.Optional(CONF_BITS_PER_SAMPLE, default="16bit"): cv.one_of(16, 24, 32, int=True),
-    cv.Optional("i2c_id"): cv.use_id(i2c.I2CComponent),
+    cv.Optional("i2c_id"): cv.use_id(i2c.I2CBus),
     cv.Optional("i2s_din_pin"): cv.int_,
     cv.Optional("adc_type", default="external"): cv.string_strict,
 }).extend(cv.COMPONENT_SCHEMA).extend(i2c.i2c_device_schema(0x40))
