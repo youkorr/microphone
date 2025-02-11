@@ -1,42 +1,68 @@
 #pragma once
 
 #include "esphome/components/i2c/i2c.h"
-#include "esphome/components/microphone/microphone.h"
-#include "esphome/components/i2s_audio/i2s_audio.h"
+#include "esphome/core/component.h"
 
 namespace esphome {
 namespace es7210 {
 
-class ES7210Component : public Component, public i2c::I2CDevice {
- public:
-  void setup() override;
-  void dump_config() override;
-  
-  void set_i2s_audio(i2s_audio::I2SAudioComponent *i2s) { i2s_ = i2s; }
-  void set_sample_rate(uint32_t rate) { sample_rate_ = rate; }
-  void set_bits_per_sample(uint8_t bits) { bits_per_sample_ = bits; }
-  void set_i2s_din_pin(uint8_t pin) { i2s_din_pin_ = pin; }
-  void set_adc_type(const std::string &type) { adc_type_ = type; }
-  i2s_port_t get_i2s_port() const { return i2s_->get_port(); }
-
- protected:
-  uint32_t sample_rate_{16000};
-  uint8_t bits_per_sample_{16};
-  uint8_t i2s_din_pin_{GPIO_NUM_16};
-  std::string adc_type_{"external"};
-  i2s_audio::I2SAudioComponent *i2s_{nullptr};
+enum ES7210BitsPerSample : uint8_t {
+  ES7210_BITS_PER_SAMPLE_16 = 16,
+  ES7210_BITS_PER_SAMPLE_18 = 18,
+  ES7210_BITS_PER_SAMPLE_20 = 20,
+  ES7210_BITS_PER_SAMPLE_24 = 24,
+  ES7210_BITS_PER_SAMPLE_32 = 32,
 };
 
-class ES7210Microphone : public microphone::Microphone {
+enum ES7210MicGain : uint8_t {
+  ES7210_MIC_GAIN_0DB = 0,
+  ES7210_MIC_GAIN_3DB,
+  ES7210_MIC_GAIN_6DB,
+  ES7210_MIC_GAIN_9DB,
+  ES7210_MIC_GAIN_12DB,
+  ES7210_MIC_GAIN_15DB,
+  ES7210_MIC_GAIN_18DB,
+  ES7210_MIC_GAIN_21DB,
+  ES7210_MIC_GAIN_24DB,
+  ES7210_MIC_GAIN_27DB,
+  ES7210_MIC_GAIN_30DB,
+  ES7210_MIC_GAIN_33DB,
+  ES7210_MIC_GAIN_34_5DB,
+  ES7210_MIC_GAIN_36DB,
+  ES7210_MIC_GAIN_37_5DB,
+};
+
+class ES7210 : public Component, public i2c::I2CDevice {
+  /* Class for configuring an ES7210 ADC for microphone input.
+   * Based on code from:
+   * - https://github.com/espressif/esp-bsp/ (accessed 20241219)
+   * - https://github.com/espressif/esp-adf/ (accessed 20241219)
+   */
  public:
-  void set_parent(ES7210Component *parent) { parent_ = parent; }
-  
+  void setup() override;
+  float get_setup_priority() const override { return setup_priority::DATA; }
+  void dump_config() override;
+
+  void set_bits_per_sample(ES7210BitsPerSample bits_per_sample) { this->bits_per_sample_ = bits_per_sample; }
+  void set_mic_gain(ES7210MicGain mic_gain) { this->mic_gain_ = mic_gain; }
+  void set_sample_rate(uint32_t sample_rate) { this->sample_rate_ = sample_rate; }
+
  protected:
-  bool is_ready_() const override { return parent_ != nullptr; }
-  int read_chunk_(int16_t *buffer, size_t length) override;
-  
- private:
-  ES7210Component *parent_{nullptr};
+  /// @brief Updates an I2C registry address by modifying the current state
+  /// @param reg_addr I2C register address
+  /// @param update_bits Mask of allowed bits to be modified
+  /// @param data Bit values to be written
+  /// @return True if successful, false otherwise
+  bool es7210_update_reg_bit_(uint8_t reg_addr, uint8_t update_bits, uint8_t data);
+
+  bool configure_i2s_format_();
+  bool configure_mic_gain_();
+  bool configure_sample_rate_();
+
+  bool enable_tdm_{false};  // TDM is unsupported in ESPHome as of version 2024.12
+  ES7210MicGain mic_gain_;
+  ES7210BitsPerSample bits_per_sample_;
+  uint32_t sample_rate_;
 };
 
 }  // namespace es7210
