@@ -3,9 +3,9 @@ import esphome.config_validation as cv
 from esphome.components import i2c, i2s_audio, microphone
 from esphome.const import CONF_ID, CONF_BITS_PER_SAMPLE, CONF_SAMPLE_RATE
 
-AUTO_LOAD = ["microphone"]
-DEPENDENCIES = ["i2c", "i2s_audio"]
-CODEOWNERS = ["@youkorr"]
+DEPENDENCIES = ['i2c', 'i2s_audio']
+AUTO_LOAD = ['microphone']
+CODEOWNERS = ['@youkorr']
 
 CONF_I2S_AUDIO = "i2s_audio_id"
 
@@ -17,7 +17,8 @@ def validate_gpio_pin(value):
         return int(value[4:])
     return cv.int_(value)
 
-CONFIG_SCHEMA = microphone.microphone_ns.schema({
+# Définissez d'abord votre schéma de configuration de base
+BASE_SCHEMA = cv.Schema({
     cv.GenerateID(): cv.declare_id(ES7210Microphone),
     cv.Required(CONF_I2S_AUDIO): cv.use_id(i2s_audio.I2SAudioComponent),
     cv.Optional(CONF_SAMPLE_RATE, default="16000Hz"): cv.frequency,
@@ -26,6 +27,9 @@ CONFIG_SCHEMA = microphone.microphone_ns.schema({
     cv.Optional("i2s_din_pin"): validate_gpio_pin,
     cv.Optional("adc_type", default="external"): cv.string_strict,
 }).extend(cv.COMPONENT_SCHEMA).extend(i2c.i2c_device_schema(0x40))
+
+# Enregistrez le composant en tant que plateforme de microphone
+CONFIG_SCHEMA = microphone.MICROPHONE_PLATFORM_SCHEMA.extend(BASE_SCHEMA)
 
 async def to_code(config):
     var = cg.new_Pvariable(config[CONF_ID])
