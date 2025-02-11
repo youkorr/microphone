@@ -1,4 +1,3 @@
-
 #pragma once
 
 #include "esphome/components/i2c/i2c.h"
